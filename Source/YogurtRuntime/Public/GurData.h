@@ -60,7 +60,7 @@ private:
 	FDateTime mTimeOnBegin;
 	double mSystemTimeOnBegin;
 
-	TArray<UDataPoint*> mDataPoints;
+	TArray<UDataPointHeatmap2D*> mDataPoints;
 
 public:
 	// Sets default values for this actor's properties
@@ -90,7 +90,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION(BlueprintCallable)
-		void RecordNow(UDataPoint* point);
+		void RecordNow(UDataPointHeatmap2D* point);
 
 	UFUNCTION(BlueprintCallable)
 		void Save();

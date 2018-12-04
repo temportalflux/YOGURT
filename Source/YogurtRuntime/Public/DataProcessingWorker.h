@@ -6,11 +6,12 @@
 #include "Runnable.h"
 #include "GurData.h"
 #include "YogurtRuntime.h"
+#include "Heatmap/2D/DataPointHeatmap2D.h"
 
 #include "DataProcessingWorker.generated.h"
 
 class QuadNode; // from QuadPackingSolver
-typedef UDataPoint* DataPoint;
+typedef UDataPointHeatmap2D* DataPoint;
 class UVersion;
 
 UENUM(BlueprintType)

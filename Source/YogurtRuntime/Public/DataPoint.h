@@ -20,24 +20,15 @@ public:
 
 	double mTimestamp;
 
-	UPROPERTY(BlueprintReadWrite)
-		FIntPoint mCoordinate;
-
-	UPROPERTY(BlueprintReadWrite)
-		FIntPoint mRadius;
-
-	UPROPERTY(BlueprintReadWrite)
-		float mStrength;
-
 public:
 	UDataPoint(const FObjectInitializer& init = FObjectInitializer::Get());
 
-	UFUNCTION(BlueprintCallable)
-		static UDataPoint* MakeDataPoint(FIntPoint coordinate, FIntPoint radius, float strength);
+	template<typename TUDataPoint>
+	TUDataPoint* Clone()
+	{
+		return NewObject<TUDataPoint>((UObject*)GetTransientPackage(), NAME_None, RF_NoFlags, this);
+	}
 
-	UDataPoint* Clone() const;
-	void CopyInto(UDataPoint* other) const;
-
-	void Serialize(FArchive& archive, UVersion* version);
+	virtual void SerializeData(FArchive& archive, UVersion* version);
 
 };

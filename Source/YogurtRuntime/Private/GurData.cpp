@@ -128,7 +128,7 @@ bool AGurData::GetCommandLineArgBool(FString key, bool& value)
 	return this->GetCommandLineArgBoolDefault(key, false, value);
 }
 
-void AGurData::RecordNow(UDataPoint* point)
+void AGurData::RecordNow(UDataPointHeatmap2D* point)
 {
 	point->mTimestamp = FPlatformTime::Seconds() - this->mSystemTimeOnBegin;
 	this->mDataPoints.Add(point);

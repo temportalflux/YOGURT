@@ -74,7 +74,7 @@ FDataProcessingWorker::FDataProcessingWorker(FString& rootPath, TArray<FString>&
 	, mpRootQuadNode(quadMapRoot)
 	, mTimeRange(timeRange)
 
-	, Data(TArray<UDataPoint*>())
+	, Data(TArray<DataPoint>())
 
 	, FilesLoaded(0)
 	, DataPointCount(0)
@@ -247,9 +247,9 @@ void FDataProcessingWorker::Serialize(FArchive& archive, UVersion* version, int3
 
 		for (int32 i = 0; i < count; ++i)
 		{
-			DataPoint point = i < data.Num() ? data[i] : NewObject<UDataPoint>();
+			DataPoint point = i < data.Num() ? data[i] : NewObject<UDataPointHeatmap2D>();
 			check(point != nullptr);
-			point->Serialize(archive, version);
+			point->SerializeData(archive, version);
 			if (data.Num() <= i) data.Add(point);
 			else data[i] = point;
 		}
@@ -264,9 +264,9 @@ void FDataProcessingWorker::Serialize(FArchive& archive, UVersion* version, int3
 
 		for (int32 i = 0; i < count; ++i)
 		{
-			DataPoint point = i < data.Num() ? data[i] : NewObject<UDataPoint>();
+			DataPoint point = i < data.Num() ? data[i] : NewObject<UDataPointHeatmap2D>();
 			check(point != nullptr);
-			point->Serialize(archive, version);
+			point->SerializeData(archive, version);
 			if (data.Num() <= i) data.Add(point);
 			else data[i] = point;
 		}
@@ -508,7 +508,7 @@ void FDataProcessingWorker::RenderDataPointsToSplat(TArray<DataPoint>& data, FIn
 		if (timeFrac < this->mTimeRange.X || timeFrac > this->mTimeRange.Y) continue;
 
 		//UE_LOG(LogYogurtRuntime, Log, TEXT("%.6f, %.6f"), point.data.X, point.data.Y);
-		uvCoordCenter = point->mCoordinate;// FIntPoint(point.data.Y, point.data.X);// FIntPoint(FMath::TruncToInt(point.data.Y), FMath::TruncToInt(point.data.X));
+		uvCoordCenter = point->mCoordinate;
 		//UE_LOG(LogYogurtRuntime, Log, TEXT("%i, %i"), uvCoord.X, uvCoord.Y);
 
 		radius = point->mRadius;

@@ -6,6 +6,8 @@
 #include "GurData.h"
 #include "GurDataHeatmap2D.generated.h"
 
+class UDataPointHeatmap2D;
+
 /**
  * 
  */
@@ -14,7 +16,10 @@ class YOGURTRUNTIME_API AGurDataHeatmap2D : public AGurData
 {
 	GENERATED_BODY()
 	
-	
+public:
+
+	UFUNCTION(BlueprintCallable)
+		UDataPointHeatmap2D* MakeData(FIntPoint coordinate, FIntPoint radius, float strength);
 	
 	
 };
