@@ -6,7 +6,6 @@
 
 #include "RunnableThread.h"
 #include "Paths.h"
-#include "Regex.h"
 
 #include "BufferArchive.h"
 #include "FileHelper.h"
@@ -17,56 +16,13 @@
 #include "RenderResource.h"
 #include "RHIResources.h"
 #include "IntPoint.h"
+#include "Version.h"
 
 //***********************************************************
 //Thread Worker Starts as NULL, prior to being instanced
 //	This line is essential! Compiler error without it
 FRunnableThread* FDataProcessingWorker::Thread = NULL;
 //***********************************************************
-
-FVersion FVersion::Parse(FString string)
-{
-	const FRegexPattern pattern = FRegexPattern(TEXT("([0-9]+)\\.*"));
-	FRegexMatcher match = FRegexMatcher(pattern, string);
-
-	FVersion version = FVersion();
-
-	int32* versions[3];
-	versions[0] = &(version.Major);
-	versions[1] = &(version.Minor);
-	versions[2] = &(version.Patch);
-
-	int32 i = 0;
-
-	while (match.FindNext())
-	{
-		int32 iBegin = match.GetMatchBeginning();
-		int32 iEnd = match.GetMatchEnding();
-		FString fullMatch = match.GetCaptureGroup(0);
-		FString versionStr = match.GetCaptureGroup(1);
-		//UE_LOG(LogYogurtRuntime, Log, TEXT("%s %s"), *string, *versionStr);
-		*(versions[i]) = FCString::Atoi(*versionStr);
-		i++;
-	}
-
-	//UE_LOG(LogYogurtRuntime, Log, TEXT("%s"), *(version.ToString()));
-
-	return version;
-}
-
-FString FVersion::ToString()
-{
-	TArray<FStringFormatArg> args = TArray<FStringFormatArg>();
-	args.Add(FStringFormatArg(this->Major));
-	args.Add(FStringFormatArg(this->Minor));
-	args.Add(FStringFormatArg(this->Patch));
-	return FString::Format(TEXT("{0}.{1}.{2}"), args);
-}
-
-bool FVersion::IsValid()
-{
-	return Major > 0 || Minor > 0 || Patch > 0;
-}
 
 FDataProcessingWorker* FDataProcessingWorker::ProcessRead(FString& rootPath, TArray<FString>& subPaths,
 	UTextureRenderTarget2D* renderTarget, TSharedPtr<QuadNode> quadMapRoot, FVector2D timeRange)
@@ -86,7 +42,7 @@ FDataProcessingWorker* FDataProcessingWorker::ProcessRead(FString& rootPath, TAr
 	return NULL;
 }
 
-FDataProcessingWorker* FDataProcessingWorker::ProcessWrite(FString& filePath, TArray<FDataPoint>& data)
+FDataProcessingWorker* FDataProcessingWorker::ProcessWrite(TSharedPtr<FString> filePath, TArray<DataPoint>& data)
 {
 	//Create new instance of thread if it does not exist
 	//	and the platform supports multi threading!
@@ -118,7 +74,7 @@ FDataProcessingWorker::FDataProcessingWorker(FString& rootPath, TArray<FString>&
 	, mpRootQuadNode(quadMapRoot)
 	, mTimeRange(timeRange)
 
-	, Data(TArray<FDataPoint>())
+	, Data(TArray<UDataPoint*>())
 
 	, FilesLoaded(0)
 	, DataPointCount(0)
@@ -126,23 +82,25 @@ FDataProcessingWorker::FDataProcessingWorker(FString& rootPath, TArray<FString>&
 {
 }
 
-FDataProcessingWorker::FDataProcessingWorker(FString& filePath, TArray<FDataPoint>& data)
+FDataProcessingWorker::FDataProcessingWorker(TSharedPtr<FString> filePath, TArray<DataPoint>& data)
 	: threadMode(EDataProcessingMode::Writing)
 
 	, RootFilePath(nullptr)
 	, SubFilePaths(TArray<FString>())
 
-	, WriteFilePath(&filePath)
+	, WriteFilePath(filePath)
 	, WriteFinished(false)
 
 	, FilesLoaded(0)
 	, DataPointCount(0)
 	, DataPointsProcessed(0)
 {
-	this->Data = TArray<FDataPoint>();
-	this->Data.Init(FDataPoint(), data.Num());
-	//for (int32 i = 0; i < data.Num(); i++) this->Data.Add(data[i]);
-	FMemory::Memcpy(this->Data.GetData(), data.GetData(), data.Num() * sizeof(FDataPoint));
+	this->Data = TArray<DataPoint>();
+	this->Data.Init(nullptr, data.Num());
+	for (int32 i = 0; i < data.Num(); i++)
+	{
+		this->Data[i] = data[i]->Clone();
+	}
 
 }
 
@@ -244,14 +202,14 @@ void FDataProcessingWorker::ReadAndProcess()
 	this->RenderSplatToTarget(this->Data);
 }
 
-void FDataProcessingWorker::ReadFromBinary(TArray<FDataPoint>& dataOut)
+void FDataProcessingWorker::ReadFromBinary(TArray<DataPoint>& dataOut)
 {
 	while (this->SubFilePaths.Num() > 0)
 	{
 		FString filePathRelative = this->SubFilePaths.Pop(true);
 		FString filePathAbsolute = FPaths::Combine(*(this->RootFilePath), filePathRelative);
 
-		TArray<FDataPoint> data;
+		TArray<DataPoint> data;
 
 		this->ReadFromBinary(filePathAbsolute, data);
 
@@ -279,18 +237,19 @@ void FDataProcessingWorker::ReadFromBinary(TArray<FDataPoint>& dataOut)
 	}
 }
 
-void FDataProcessingWorker::Serialize(FArchive& archive, FVersion& version, int32& count, TArray<FDataPoint>& data)
+void FDataProcessingWorker::Serialize(FArchive& archive, UVersion* version, int32& count, TArray<DataPoint>& data)
 {
+	check(version != nullptr);
 	// 0.0.0
-	if (!version.IsValid())
+	if (!version->IsValid())
 	{
 		archive << count;
 
 		for (int32 i = 0; i < count; ++i)
 		{
-			FDataPoint point = i < data.Num() ? data[i] : FDataPoint();
-			archive << point.timestamp;
-			archive << point.data;
+			DataPoint point = i < data.Num() ? data[i] : NewObject<UDataPoint>();
+			check(point != nullptr);
+			point->Serialize(archive, version);
 			if (data.Num() <= i) data.Add(point);
 			else data[i] = point;
 		}
@@ -299,17 +258,15 @@ void FDataProcessingWorker::Serialize(FArchive& archive, FVersion& version, int3
 	}
 
 	// 0.0.1
-	if (version.Major == 0 && version.Minor == 0 && version.Patch == 1)
+	if (version->Major == 0 && version->Minor == 0 && version->Patch == 1)
 	{
 		archive << count;
 
 		for (int32 i = 0; i < count; ++i)
 		{
-			FDataPoint point = i < data.Num() ? data[i] : FDataPoint();
-			archive << point.timestamp;
-			archive << point.data;
-			archive << point.Radius;
-			archive << point.Strength;
+			DataPoint point = i < data.Num() ? data[i] : NewObject<UDataPoint>();
+			check(point != nullptr);
+			point->Serialize(archive, version);
 			if (data.Num() <= i) data.Add(point);
 			else data[i] = point;
 		}
@@ -319,7 +276,7 @@ void FDataProcessingWorker::Serialize(FArchive& archive, FVersion& version, int3
 
 }
 
-bool FDataProcessingWorker::WriteToBinary(FString filePath, TArray<FDataPoint>& data)
+bool FDataProcessingWorker::WriteToBinary(FString filePath, TArray<DataPoint>& data)
 {
 	// http://runedegroot.com/saving-and-loading-actor-data-in-unreal-engine-4/
 
@@ -327,8 +284,9 @@ bool FDataProcessingWorker::WriteToBinary(FString filePath, TArray<FDataPoint>& 
 	
 	FBufferArchive ToBinary;
 
-	FVersion version = FVersion(0, 0, 1);
-	FString versionStr = version.ToString();
+	UVersion* version = NewObject<UVersion>();
+	version->Patch = 1;
+	FString versionStr = version->ToString();
 	ToBinary << versionStr;
 
 	int32 count = data.Num();
@@ -352,7 +310,7 @@ bool FDataProcessingWorker::WriteToBinary(FString filePath, TArray<FDataPoint>& 
 	return result;
 }
 
-void FDataProcessingWorker::ReadFromBinary(FString absolutePath, TArray<FDataPoint>& dataOut)
+void FDataProcessingWorker::ReadFromBinary(FString absolutePath, TArray<DataPoint>& dataOut)
 {
 	dataOut.Empty();
 
@@ -373,8 +331,8 @@ void FDataProcessingWorker::ReadFromBinary(FString absolutePath, TArray<FDataPoi
 
 	FString versionStr;
 	FromBinary << versionStr;
-	FVersion version = FVersion::Parse(versionStr);
-	if (!version.IsValid())
+	UVersion* version = UVersion::Parse(versionStr);
+	if (!version->IsValid())
 	{
 		FromBinary.Seek(0);
 	}
@@ -391,7 +349,7 @@ void FDataProcessingWorker::ReadFromBinary(FString absolutePath, TArray<FDataPoi
 	FromBinary.Close();
 }
 
-void FDataProcessingWorker::RenderSplatToTarget(TArray<FDataPoint>& data)
+void FDataProcessingWorker::RenderSplatToTarget(TArray<DataPoint>& data)
 {
 	//UE_LOG(LogYogurtRuntime, Log, TEXT("Will render %i data points (%i)"), data.Num(), this->DataPointCount);
 	//this->DataPointsProcessed = this->DataPointCount;
@@ -539,26 +497,26 @@ void FDataProcessingWorker::CopyPixelsToTexture(FRHITexture2D* texture, TArray<u
 	//this->RenderTarget->UpdateResource();
 }
 
-void FDataProcessingWorker::RenderDataPointsToSplat(TArray<FDataPoint>& data, FIntPoint size, TArray<float>& pixels, float& maxIntensity)
+void FDataProcessingWorker::RenderDataPointsToSplat(TArray<DataPoint>& data, FIntPoint size, TArray<float>& pixels, float& maxIntensity)
 {
 	FIntPoint radius, uvCoordCenter;
-	FDataPoint lastPoint = data.Last();
-	double lastTimeStamp = lastPoint.timestamp;
-	for (FDataPoint point : data)
+	DataPoint lastPoint = data.Last();
+	double lastTimeStamp = lastPoint->mTimestamp;
+	for (DataPoint point : data)
 	{
-		double timeFrac = point.timestamp / lastTimeStamp;
+		double timeFrac = point->mTimestamp / lastTimeStamp;
 		if (timeFrac < this->mTimeRange.X || timeFrac > this->mTimeRange.Y) continue;
 
 		//UE_LOG(LogYogurtRuntime, Log, TEXT("%.6f, %.6f"), point.data.X, point.data.Y);
-		uvCoordCenter = point.data;// FIntPoint(point.data.Y, point.data.X);// FIntPoint(FMath::TruncToInt(point.data.Y), FMath::TruncToInt(point.data.X));
+		uvCoordCenter = point->mCoordinate;// FIntPoint(point.data.Y, point.data.X);// FIntPoint(FMath::TruncToInt(point.data.Y), FMath::TruncToInt(point.data.X));
 		//UE_LOG(LogYogurtRuntime, Log, TEXT("%i, %i"), uvCoord.X, uvCoord.Y);
 
-		radius = point.Radius;
+		radius = point->mRadius;
 
 		//UE_LOG(LogYogurtRuntime, Log, TEXT("Point: (%i, %i) Radius: (%i, %i)"),
 		//	uvCoordCenter.X, uvCoordCenter.Y, radius.X, radius.Y);
 
-		this->DrawSmoothSplat(size, pixels, maxIntensity, uvCoordCenter, radius, point.Strength);
+		this->DrawSmoothSplat(size, pixels, maxIntensity, uvCoordCenter, radius, point->mStrength);
 
 		//float intensityTotal = this->AddColor(pixels, size, uvCoordCenter, 1.0f);
 		//if (intensityTotal > maxIntensity) maxIntensity = intensityTotal;

@@ -74,9 +74,8 @@ void AGurData::Tick(float DeltaTime)
 		}
 		filePath = filePath.Replace(TEXT("${moduleId}"), *this->ModuleId);
 		filePath = FPaths::Combine(this->RootDataPath, filePath);
-
-
-		auto thread = FDataProcessingWorker::ProcessWrite(filePath, this->mDataPoints);
+		
+		auto thread = FDataProcessingWorker::ProcessWrite(MakeShareable(new FString(filePath)), this->mDataPoints);
 		if (thread != nullptr)
 		{
 			//UE_LOG(LogYogurtRuntime, Warning, TEXT("Saving %i data points"), this->mDataPoints.Num());
@@ -129,9 +128,9 @@ bool AGurData::GetCommandLineArgBool(FString key, bool& value)
 	return this->GetCommandLineArgBoolDefault(key, false, value);
 }
 
-void AGurData::RecordNow(FDataPoint point)
+void AGurData::RecordNow(UDataPoint* point)
 {
-	point.timestamp = FPlatformTime::Seconds() - this->mSystemTimeOnBegin;
+	point->mTimestamp = FPlatformTime::Seconds() - this->mSystemTimeOnBegin;
 	this->mDataPoints.Add(point);
 }
 

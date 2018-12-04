@@ -6,28 +6,9 @@
 #include "GameFramework/Actor.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "QuadPackingSolver.h"
+#include "DataPoint.h"
 
 #include "GurData.generated.h"
-
-USTRUCT(BlueprintType)
-struct YOGURTRUNTIME_API FDataPoint
-{
-	GENERATED_BODY()
-
-public:
-
-	double timestamp;
-
-	UPROPERTY(BlueprintReadWrite)
-		FIntPoint data;
-
-	UPROPERTY(BlueprintReadWrite)
-		FIntPoint Radius;
-
-	UPROPERTY(BlueprintReadWrite)
-		float Strength;
-
-};
 
 UCLASS()
 class YOGURTRUNTIME_API AGurData : public AActor
@@ -79,7 +60,7 @@ private:
 	FDateTime mTimeOnBegin;
 	double mSystemTimeOnBegin;
 
-	TArray<FDataPoint> mDataPoints;
+	TArray<UDataPoint*> mDataPoints;
 
 public:
 	// Sets default values for this actor's properties
@@ -109,7 +90,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION(BlueprintCallable)
-		void RecordNow(FDataPoint point);
+		void RecordNow(UDataPoint* point);
 
 	UFUNCTION(BlueprintCallable)
 		void Save();
