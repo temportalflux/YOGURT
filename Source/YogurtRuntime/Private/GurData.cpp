@@ -7,18 +7,6 @@
 #include "CommandLine.h"
 #include "Regex.h"
 
-#include "BufferArchive.h"
-#include "FileHelper.h"
-#include "Paths.h"
-#include "MemoryReader.h"
-
-#include "Materials/MaterialInstanceDynamic.h"
-
-#include "DataProcessingWorker.h"
-#include "Engine/World.h"
-#include "RecordingAreaQuad.h"
-#include "EngineUtils.h"
-
 // Sets default values
 AGurData::AGurData()
 {
@@ -44,12 +32,6 @@ void AGurData::BeginPlay()
 	UE_LOG(LogYogurtRuntime, Log, TEXT("Loaded options: GurShouldRecord:%s GurFolder:%s GurFilenameFormat:%s"), *FString(this->ShouldRecordData ? "true" : "false"), *this->RootDataPath, *this->RecordFilenameFormat);
 
 	Super::BeginPlay();
-
-	TSharedPtr<QuadPackingSolver> pSolver = MakeShareable(new QuadPackingSolver());
-	pSolver->SetMaxSize(this->TextureSize);
-	this->BuildRecordingArea(pSolver);
-	pSolver.Reset();
-
 }
 
 // Called every frame
@@ -75,13 +57,18 @@ void AGurData::Tick(float DeltaTime)
 		filePath = filePath.Replace(TEXT("${moduleId}"), *this->ModuleId);
 		filePath = FPaths::Combine(this->RootDataPath, filePath);
 		
-		auto thread = FDataProcessingWorker::ProcessWrite(MakeShareable(new FString(filePath)), this->mDataPoints);
+		auto thread = this->SaveToDisk(MakeShareable(new FString(filePath)));
 		if (thread != nullptr)
 		{
 			//UE_LOG(LogYogurtRuntime, Warning, TEXT("Saving %i data points"), this->mDataPoints.Num());
 			this->dataNeedsToBeSaved = false;
 		}
 	}
+}
+
+FDataProcessingWorker* AGurData::SaveToDisk(TSharedPtr<FString> filePath)
+{
+	return nullptr;
 }
 
 void AGurData::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -128,10 +115,14 @@ bool AGurData::GetCommandLineArgBool(FString key, bool& value)
 	return this->GetCommandLineArgBoolDefault(key, false, value);
 }
 
-void AGurData::RecordNow(UDataPointHeatmap2D* point)
+void AGurData::Record(UDataPoint* point)
+{
+}
+
+void AGurData::RecordNow(UDataPoint* point)
 {
 	point->mTimestamp = FPlatformTime::Seconds() - this->mSystemTimeOnBegin;
-	this->mDataPoints.Add(point);
+	this->Record(point);
 }
 
 void AGurData::Save()
@@ -144,78 +135,11 @@ void AGurData::Load(FVector2D timeRange)
 {
 	UE_LOG(LogYogurtRuntime, Log, TEXT("Attempting to read from data files"));
 
-	// Construct the meshes
-	TSharedPtr<QuadPackingSolver> pSolver = MakeShareable(new QuadPackingSolver());
-	pSolver->SetMaxSize(this->TextureSize);
-
-	// Do this first, before threading, to solve the packing data
-	this->BuildRecordingArea(pSolver);
-	
-	//Multi-threading, returns handle that could be cached.
-	//	use static function FPrimeNumberWorker::Shutdown() if necessary
-	FDataProcessingWorker::ProcessRead(this->RootDataPath, this->FilePaths, this->RenderTarget, pSolver->GetRootNode(), timeRange);
-
-	pSolver.Reset();
+	this->ReadFromDisk(timeRange);
 }
 
-void AGurData::BuildRecordingArea(TSharedPtr<QuadPackingSolver> pSolver)
+FDataProcessingWorker* AGurData::ReadFromDisk(FVector2D timeRange)
 {
-
-	TArray<ARecordingAreaQuad*> recordingAreas;
-	for (TActorIterator<AActor> iter(this->GetWorld(), ARecordingAreaQuad::StaticClass()); iter; ++iter)
-	{
-		ARecordingAreaQuad* Actor = Cast<ARecordingAreaQuad>(*iter);
-		if (Actor && !Actor->IsPendingKill())
-		{
-			Actor->SizeToUvScale = this->UnitToUvScale;
-			recordingAreas.Add(Actor);
-		}
-	}
-
-	recordingAreas.StableSort([](ARecordingAreaQuad& a, ARecordingAreaQuad& b) {
-		FVector2D aSize = a.LocalToUvScaleRatio();
-		FVector2D bSize = b.LocalToUvScaleRatio();
-		// sort by largest in height, then largest in width
-		// decreasing order
-		if (aSize.Y > bSize.Y) return true;
-		else if (bSize.Y > aSize.Y) return false;
-		else if (aSize.X > bSize.X) return true;
-		else return a.GetName() < b.GetName();
-	});
-
-	// for the generated UV texture
-	UMaterialInstanceDynamic* MaterialInstanceRenderToUvTexture = nullptr;
-	if (this->MaterialRenderToUvTexture)
-	{
-		MaterialInstanceRenderToUvTexture = UMaterialInstanceDynamic::Create(this->MaterialRenderToUvTexture, this);
-	}
-
-	int32 actorsAttemptedPacked = 0;
-
-	for (auto& Actor : recordingAreas)
-	{
-		if (this->AmountOfActorsToPack >= 0 && actorsAttemptedPacked >= this->AmountOfActorsToPack) break;
-
-		FIntPoint quadSize = Actor->LocalToUvScaleRatio().IntPoint();
-		//UE_LOG(LogYogurtRuntime, Log, TEXT("Trying to pack %s, with uv pixel size of (%.3f, %.3f)"), *(Actor->GetName()), quadSize.X, quadSize.Y);
-
-		FIntPoint uvCoordinate;
-		if (pSolver->TryPack(quadSize, uvCoordinate))
-		{
-			UE_LOG(LogYogurtRuntime, Log, TEXT("Packed %s at uv coord (%i, %i)"),
-				*(Actor->GetName()), uvCoordinate.X, uvCoordinate.Y);
-			// successfully packed the quad, position stored in uvCoordinate
-			Actor->SetMeshUvCoordinate(FVector2D(uvCoordinate), this->TextureSize, MaterialInstanceRenderToUvTexture);
-		}
-		else
-		{
-			// failed to pack the quad
-			UE_LOG(LogYogurtRuntime, Warning, TEXT("Failed to pack quad named %s"), *(Actor->GetName()));
-		}
-
-		actorsAttemptedPacked++;
-	}
-
-	//this->OnUpdatePackingNodes(pSolver->GetPackingNodes());
+	return nullptr;
 }
 

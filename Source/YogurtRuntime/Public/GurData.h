@@ -10,6 +10,8 @@
 
 #include "GurData.generated.h"
 
+class FDataProcessingWorker;
+
 UCLASS()
 class YOGURTRUNTIME_API AGurData : public AActor
 {
@@ -55,12 +57,10 @@ public:
 
 	bool dataNeedsToBeSaved;
 
-private:
+protected:
 
 	FDateTime mTimeOnBegin;
 	double mSystemTimeOnBegin;
-
-	TArray<UDataPointHeatmap2D*> mDataPoints;
 
 public:
 	// Sets default values for this actor's properties
@@ -83,22 +83,23 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
-	void BuildRecordingArea(TSharedPtr<QuadPackingSolver> pSolver);
+	virtual FDataProcessingWorker* SaveToDisk(TSharedPtr<FString> filePath);
+	virtual FDataProcessingWorker* ReadFromDisk(FVector2D timeRange);
 
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION(BlueprintCallable)
-		void RecordNow(UDataPointHeatmap2D* point);
+		virtual void Record(UDataPoint* point);
+
+	UFUNCTION(BlueprintCallable)
+		void RecordNow(UDataPoint* point);
 
 	UFUNCTION(BlueprintCallable)
 		void Save();
 
 	UFUNCTION(BlueprintCallable)
 		void Load(FVector2D timeRange);
-
-	//UFUNCTION(BlueprintNativeEvent)
-	//	void OnUpdatePackingNodes(TArray<FPackingNode> nodes);
 
 };
