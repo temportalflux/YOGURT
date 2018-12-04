@@ -59,7 +59,24 @@ void AGurData::Tick(float DeltaTime)
 
 	if (this->dataNeedsToBeSaved)
 	{
-		auto thread = FDataProcessingWorker::ProcessWrite(this->RootDataPath, this->RecordFilenameFormat, this->mTimeOnBegin, this->ModuleId, this->mDataPoints);
+
+		FString filePath = FString(this->RecordFilenameFormat);
+		const FRegexPattern patternTime = FRegexPattern(TEXT("\\$\\{time\\|([^\\}]*?)\\}"));
+		FRegexMatcher matchTime = FRegexMatcher(patternTime, filePath);
+		while (matchTime.FindNext())
+		{
+			int32 iBegin = matchTime.GetMatchBeginning();
+			int32 iEnd = matchTime.GetMatchEnding();
+			FString fullMatch = matchTime.GetCaptureGroup(0);
+			FString timeFormat = matchTime.GetCaptureGroup(1);
+			FString formatted = this->mTimeOnBegin.ToString(*timeFormat);
+			filePath = filePath.Replace(*fullMatch, *formatted);
+		}
+		filePath = filePath.Replace(TEXT("${moduleId}"), *this->ModuleId);
+		filePath = FPaths::Combine(this->RootDataPath, filePath);
+
+
+		auto thread = FDataProcessingWorker::ProcessWrite(filePath, this->mDataPoints);
 		if (thread != nullptr)
 		{
 			//UE_LOG(LogYogurtRuntime, Warning, TEXT("Saving %i data points"), this->mDataPoints.Num());

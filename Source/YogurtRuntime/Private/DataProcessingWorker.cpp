@@ -86,7 +86,7 @@ FDataProcessingWorker* FDataProcessingWorker::ProcessRead(FString& rootPath, TAr
 	return NULL;
 }
 
-FDataProcessingWorker* FDataProcessingWorker::ProcessWrite(FString& rootPath, FString& filenameFormat, FDateTime& timeBegin, FString& moduleId, TArray<FDataPoint>& data)
+FDataProcessingWorker* FDataProcessingWorker::ProcessWrite(FString& filePath, TArray<FDataPoint>& data)
 {
 	//Create new instance of thread if it does not exist
 	//	and the platform supports multi threading!
@@ -97,7 +97,7 @@ FDataProcessingWorker* FDataProcessingWorker::ProcessWrite(FString& rootPath, FS
 	}
 	if (FPlatformProcess::SupportsMultithreading())
 	{
-		FDataProcessingWorker* runnable = new FDataProcessingWorker(rootPath, filenameFormat, timeBegin, moduleId, data);
+		FDataProcessingWorker* runnable = new FDataProcessingWorker(filePath, data);
 
 		Thread = FRunnableThread::Create(runnable, TEXT("FDataProcessingWorker"), 0, TPri_BelowNormal);
 		//windows default = 8mb for thread, could specify more
@@ -126,15 +126,13 @@ FDataProcessingWorker::FDataProcessingWorker(FString& rootPath, TArray<FString>&
 {
 }
 
-FDataProcessingWorker::FDataProcessingWorker(FString& rootPath, FString& filenameFormat, FDateTime& timeBegin, FString& moduleId, TArray<FDataPoint>& data)
+FDataProcessingWorker::FDataProcessingWorker(FString& filePath, TArray<FDataPoint>& data)
 	: threadMode(EDataProcessingMode::Writing)
 
-	, RootFilePath(&rootPath)
+	, RootFilePath(nullptr)
 	, SubFilePaths(TArray<FString>())
 
-	, WriteFilenameFormat(&filenameFormat)
-	, WriteBeginTime(&timeBegin)
-	, WriteModuleId(&moduleId)
+	, WriteFilePath(&filePath)
 	, WriteFinished(false)
 
 	, FilesLoaded(0)
@@ -213,7 +211,7 @@ uint32 FDataProcessingWorker::Run()
 			this->ReadAndProcess();
 			break;
 		case EDataProcessingMode::Writing:
-			this->WriteToBinary(*this->RootFilePath, *this->WriteFilenameFormat, *this->WriteBeginTime, *this->WriteModuleId, this->Data);
+			this->WriteToBinary(*this->WriteFilePath, this->Data);
 			break;
 		default:
 			break;
@@ -321,27 +319,9 @@ void FDataProcessingWorker::Serialize(FArchive& archive, FVersion& version, int3
 
 }
 
-bool FDataProcessingWorker::WriteToBinary(FString rootPath, FString filenameForamt, FDateTime beginTime, FString moduleId, TArray<FDataPoint>& data)
+bool FDataProcessingWorker::WriteToBinary(FString filePath, TArray<FDataPoint>& data)
 {
 	// http://runedegroot.com/saving-and-loading-actor-data-in-unreal-engine-4/
-
-	FString filePath = FString(filenameForamt);
-
-	const FRegexPattern patternTime = FRegexPattern(TEXT("\\$\\{time\\|([^\\}]*?)\\}"));
-	FRegexMatcher matchTime = FRegexMatcher(patternTime, filePath);
-	while (matchTime.FindNext())
-	{
-		int32 iBegin = matchTime.GetMatchBeginning();
-		int32 iEnd = matchTime.GetMatchEnding();
-		FString fullMatch = matchTime.GetCaptureGroup(0);
-		FString timeFormat = matchTime.GetCaptureGroup(1);
-		FString formatted = beginTime.ToString(*timeFormat);
-		filePath = filePath.Replace(*fullMatch, *formatted);
-	}
-
-	filePath = filePath.Replace(TEXT("${moduleId}"), *moduleId);
-
-	filePath = FPaths::Combine(rootPath, filePath);
 
 	//UE_LOG(LogYogurtRuntime, Warning, TEXT("Saving to %s"), *filePath);
 	

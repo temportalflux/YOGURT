@@ -80,9 +80,7 @@ private:
 	/** ~~~ Begin: Write Data ~~~ */
 
 	bool WriteFinished;
-	FString* WriteFilenameFormat;
-	FDateTime* WriteBeginTime;
-	FString* WriteModuleId;
+	FString* WriteFilePath;
 
 	/** ~~~~~ END: Write Data ~~~ */
 
@@ -98,7 +96,7 @@ private:
 
 	void Serialize(FArchive& archive, FVersion& version, int32& count, TArray<FDataPoint>& data);
 
-	bool WriteToBinary(FString rootPath, FString filenameForamt, FDateTime beginTime, FString moduleId, TArray<FDataPoint>& data);
+	bool WriteToBinary(FString filePath, TArray<FDataPoint>& data);
 	void ReadFromBinary(TArray<FDataPoint>& dataOut);
 	void ReadFromBinary(FString absolutePath, TArray<FDataPoint>& dataOut);
 	
@@ -132,13 +130,13 @@ public:
 	This code ensures only 1 Prime Number thread will be able to run at a time. This function returns a handle to the newly started instance.
 	*/
 	static FDataProcessingWorker* ProcessRead(FString& rootPath, TArray<FString>& subPaths, UTextureRenderTarget2D* renderTarget, TSharedPtr<QuadNode> quadMapRoot, FVector2D timeRange);
-	static FDataProcessingWorker* ProcessWrite(FString& rootPath, FString& filenameFormat, FDateTime& timeBegin, FString& moduleId, TArray<FDataPoint>& data);
+	static FDataProcessingWorker* ProcessWrite(FString& filePath, TArray<FDataPoint>& data);
 
 	/** ~~~ Begin: Thread Core Functions ~~~ */
 
 	//Constructor / Destructor
 	FDataProcessingWorker(FString& rootPath, TArray<FString>& subPaths, UTextureRenderTarget2D* renderTarget, TSharedPtr<QuadNode> quadMapRoot, FVector2D timeRange);
-	FDataProcessingWorker(FString& rootPath, FString& filenameFormat, FDateTime& timeBegin, FString& moduleId, TArray<FDataPoint>& data);
+	FDataProcessingWorker(FString& filePath, TArray<FDataPoint>& data);
 	virtual ~FDataProcessingWorker();
 
 	/** ~~~ Begin: FRunnable ~~~ */
