@@ -1,0 +1,23 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "0.0.2",
+	"FriendlyName": "YOGURT",
+	"Description": "Your very Own Games User Research Toolset! A plugin to assist with Games User Research by recording, processing, and integrating playtest data into the editor.",
+	"Category": "Other",
+	"CreatedBy": "Dustin Yost",
+	"CreatedByURL": "dustinyost.com",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": true,
+	"IsBetaVersion": true,
+	"Installed": true,
+	"Modules": [
+		{
+			"Name": "YogurtRuntime",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	]
+}
