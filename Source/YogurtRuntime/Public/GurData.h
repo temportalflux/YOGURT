@@ -10,8 +10,6 @@
 
 #include "GurData.generated.h"
 
-class FDataProcessingWorker;
-
 UCLASS()
 class YOGURTRUNTIME_API AGurData : public AActor
 {
@@ -83,8 +81,8 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
-	virtual FDataProcessingWorker* SaveToDisk(TSharedPtr<FString> filePath);
-	virtual FDataProcessingWorker* ReadFromDisk(FVector2D timeRange);
+	virtual bool SaveToDisk(TSharedPtr<FString> filePath);
+	virtual bool ReadFromDisk(FVector2D timeRange);
 
 public:
 	// Called every frame

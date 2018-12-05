@@ -57,8 +57,8 @@ void AGurData::Tick(float DeltaTime)
 		filePath = filePath.Replace(TEXT("${moduleId}"), *this->ModuleId);
 		filePath = FPaths::Combine(this->RootDataPath, filePath);
 		
-		auto thread = this->SaveToDisk(MakeShareable(new FString(filePath)));
-		if (thread != nullptr)
+		auto createdThread = this->SaveToDisk(MakeShareable(new FString(filePath)));
+		if (createdThread)
 		{
 			//UE_LOG(LogYogurtRuntime, Warning, TEXT("Saving %i data points"), this->mDataPoints.Num());
 			this->dataNeedsToBeSaved = false;
@@ -66,9 +66,9 @@ void AGurData::Tick(float DeltaTime)
 	}
 }
 
-FDataProcessingWorker* AGurData::SaveToDisk(TSharedPtr<FString> filePath)
+bool AGurData::SaveToDisk(TSharedPtr<FString> filePath)
 {
-	return nullptr;
+	return false;
 }
 
 void AGurData::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -138,8 +138,8 @@ void AGurData::Load(FVector2D timeRange)
 	this->ReadFromDisk(timeRange);
 }
 
-FDataProcessingWorker* AGurData::ReadFromDisk(FVector2D timeRange)
+bool AGurData::ReadFromDisk(FVector2D timeRange)
 {
-	return nullptr;
+	return false;
 }
 

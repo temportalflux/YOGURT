@@ -7,7 +7,6 @@
 #include "GurDataHeatmap2D.generated.h"
 
 class UDataPointHeatmap2D;
-class FDataProcessingWorker;
 class QuadPackingSolver;
 
 /**
@@ -32,8 +31,8 @@ public:
 
 protected:
 
-	virtual FDataProcessingWorker* SaveToDisk(TSharedPtr<FString> filePath) override;
-	virtual FDataProcessingWorker* ReadFromDisk(FVector2D timeRange) override;
+	virtual bool SaveToDisk(TSharedPtr<FString> filePath) override;
+	virtual bool ReadFromDisk(FVector2D timeRange) override;
 
 	void BuildRecordingArea(TSharedPtr<QuadPackingSolver> pSolver);
 

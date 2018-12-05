@@ -4,6 +4,7 @@
 
 #include "Heatmap/2D/DataPointHeatmap2D.h"
 #include "DataProcessingWorker.h"
+#include "Heatmap/2D/WorkerHeatmap2D.h"
 
 #include "RecordingAreaQuad.h"
 #include "Engine/World.h"
@@ -19,7 +20,7 @@ UDataPointHeatmap2D* AGurDataHeatmap2D::MakeData(FIntPoint coordinate, FIntPoint
 	point->mStrength = strength;
 	return point;
 }
-void AGurData::BeginPlay()
+void AGurDataHeatmap2D::BeginPlay()
 {
 	Super::BeginPlay();
 
@@ -38,12 +39,12 @@ void AGurDataHeatmap2D::Record(UDataPoint* point)
 	}
 }
 
-FDataProcessingWorker* AGurDataHeatmap2D::SaveToDisk(TSharedPtr<FString> filePath)
+bool AGurDataHeatmap2D::SaveToDisk(TSharedPtr<FString> filePath)
 {
-	return FDataProcessingWorker::ProcessWrite(filePath, this->mDataPoints);
+	return FDataProcessingWorker<UDataPointHeatmap2D>::ProcessWrite(filePath, this->mDataPoints);
 }
 
-FDataProcessingWorker* AGurDataHeatmap2D::ReadFromDisk(FVector2D timeRange)
+bool AGurDataHeatmap2D::ReadFromDisk(FVector2D timeRange)
 {
 	// Construct the meshes
 	TSharedPtr<QuadPackingSolver> pSolver = MakeShareable(new QuadPackingSolver());
@@ -54,11 +55,11 @@ FDataProcessingWorker* AGurDataHeatmap2D::ReadFromDisk(FVector2D timeRange)
 
 	//Multi-threading, returns handle that could be cached.
 	//	use static function FPrimeNumberWorker::Shutdown() if necessary
-	auto thread = FDataProcessingWorker::ProcessRead(this->RootDataPath, this->FilePaths, this->RenderTarget, pSolver->GetRootNode(), timeRange);
+	auto createdThread = FWorkerHeatmap2D::ProcessRead(this->RootDataPath, this->FilePaths, timeRange, this->RenderTarget, pSolver->GetRootNode());
 
 	pSolver.Reset();
 
-	return thread;
+	return createdThread;
 }
 
 void AGurDataHeatmap2D::BuildRecordingArea(TSharedPtr<QuadPackingSolver> pSolver)
