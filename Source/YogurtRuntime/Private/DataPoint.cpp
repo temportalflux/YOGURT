@@ -2,10 +2,19 @@
 
 #include "DataPoint.h"
 #include "Version.h"
+#include "YogurtRuntime.h"
 
 UDataPoint::UDataPoint(FObjectInitializer const & init)
 {
-	this->mTimestamp = 0;
+	UDataPoint* point = Cast<UDataPoint>(init.GetArchetype());
+	if (point == nullptr)
+	{
+		this->mTimestamp = 0;
+	}
+	else
+	{
+		this->mTimestamp = point->mTimestamp;
+	}
 }
 
 void UDataPoint::SerializeData(FArchive& archive, UVersion* version)

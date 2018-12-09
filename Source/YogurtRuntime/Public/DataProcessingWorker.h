@@ -101,7 +101,7 @@ protected:
 
 			for (int32 i = 0; i < count; ++i)
 			{
-				DataPoint point = i < data.Num() ? data[i] : NewObject<UDataPointHeatmap2D>();
+				DataPoint point = i < data.Num() ? data[i] : NewObject<TUDataPoint>();
 				check(point != nullptr);
 				point->SerializeData(archive, version);
 				if (data.Num() <= i) data.Add(point);
@@ -118,7 +118,7 @@ protected:
 
 			for (int32 i = 0; i < count; ++i)
 			{
-				DataPoint point = i < data.Num() ? data[i] : NewObject<UDataPointHeatmap2D>();
+				DataPoint point = i < data.Num() ? data[i] : NewObject<TUDataPoint>();
 				check(point != nullptr);
 				point->SerializeData(archive, version);
 				if (data.Num() <= i) data.Add(point);
@@ -296,7 +296,6 @@ public:
 		this->Data.Init(nullptr, data.Num());
 		for (int32 i = 0; i < data.Num(); i++)
 		{
-			// TODO
 			this->Data[i] = data[i]->Clone();
 		}
 

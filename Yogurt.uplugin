@@ -1,7 +1,7 @@
 {
 	"FileVersion": 3,
 	"Version": 1,
-	"VersionName": "0.0.2",
+	"VersionName": "1.0.0",
 	"FriendlyName": "YOGURT",
 	"Description": "Your very Own Games User Research Toolset! A plugin to assist with Games User Research by recording, processing, and integrating playtest data into the editor.",
 	"Category": "Other",
@@ -11,7 +11,7 @@
 	"MarketplaceURL": "",
 	"SupportURL": "",
 	"CanContainContent": true,
-	"IsBetaVersion": true,
+	"IsBetaVersion": false,
 	"Installed": true,
 	"Modules": [
 		{

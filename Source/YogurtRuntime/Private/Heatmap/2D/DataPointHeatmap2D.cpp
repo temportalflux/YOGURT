@@ -6,9 +6,19 @@
 UDataPointHeatmap2D::UDataPointHeatmap2D(FObjectInitializer const & init)
 	: UDataPoint(init)
 {
-	this->mCoordinate = FIntPoint(0, 0);
-	this->mRadius = FIntPoint(0, 0);
-	this->mStrength = 0;
+	UDataPointHeatmap2D* point = Cast<UDataPointHeatmap2D>(init.GetArchetype());
+	if (point == nullptr)
+	{
+		this->mCoordinate = FIntPoint(0, 0);
+		this->mRadius = FIntPoint(0, 0);
+		this->mStrength = 0;
+	}
+	else
+	{
+		this->mCoordinate = point->mCoordinate;
+		this->mRadius = point->mRadius;
+		this->mStrength = point->mStrength;
+	}
 }
 
 UDataPointHeatmap2D* UDataPointHeatmap2D::Clone()

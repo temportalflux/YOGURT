@@ -70,7 +70,7 @@ void FWorkerHeatmap2D::RenderSplatToTarget(TArray<UDataPointHeatmap2D*>& data)
 	FRHITexture2D* renderTexture = this->RenderTarget->Resource->TextureRHI->GetTexture2D();
 	FIntPoint size = renderTexture->GetSizeXY();
 
-	UE_LOG(LogYogurtRuntime, Log, TEXT("%ix%i (%i)"), size.X, size.Y, size.X * size.Y);
+	UE_LOG(LogYogurtRuntime, Log, TEXT("Texture Target Size: %ix%i (%i)"), size.X, size.Y, size.X * size.Y);
 
 	TArray<float> Pixels;
 	//TArray<uint32> Pixels;
@@ -151,13 +151,19 @@ void FWorkerHeatmap2D::RenderSplatToTarget(TArray<UDataPointHeatmap2D*>& data)
 
 void FWorkerHeatmap2D::RenderDataPointsToSplat(TArray<UDataPointHeatmap2D*>& data, FIntPoint size, TArray<float>& pixels, float& maxIntensity)
 {
+	UE_LOG(LogYogurtRuntime, Log, TEXT("Rendering %i data points"), data.Num());
+	if (data.Num() <= 0) return;
 	UDataPointHeatmap2D* lastPoint = data.Last();
 	double lastTimeStamp = lastPoint->mTimestamp;
+	//UE_LOG(LogYogurtRuntime, Log, TEXT("%.06f"), lastTimeStamp);
 	for (UDataPointHeatmap2D* point : data)
 	{
 		double timeFrac = point->mTimestamp / lastTimeStamp;
+		//UE_LOG(LogYogurtRuntime, Log, TEXT("%.06f"), point->mTimestamp);
+		//UE_LOG(LogYogurtRuntime, Log, TEXT("%.06f < %.06f < %.06f"), this->mTimeRange.X, timeFrac, this->mTimeRange.Y);
 		if (timeFrac < this->mTimeRange.X || timeFrac > this->mTimeRange.Y) continue;
 
+		//UE_LOG(LogYogurtRuntime, Log, TEXT("(%i, %i)"), point->mCoordinate.X, point->mCoordinate.Y);
 		this->DrawSmoothSplat(size, pixels, maxIntensity, point->mCoordinate, point->mRadius, point->mStrength);
 
 		this->DataPointsProcessed++;
