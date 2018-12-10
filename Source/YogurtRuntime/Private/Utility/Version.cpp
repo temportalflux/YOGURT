@@ -1,6 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "Version.h"
+#include "Utility/Version.h"
 #include "Regex.h"
 
 UVersion* UVersion::Parse(FString string)

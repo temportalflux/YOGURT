@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Heatmap/2D/DataPointHeatmap2D.h"
-#include "Version.h"
+#include "Utility/Version.h"
 
 UDataPointHeatmap2D::UDataPointHeatmap2D(FObjectInitializer const & init)
 	: UDataPoint(init)

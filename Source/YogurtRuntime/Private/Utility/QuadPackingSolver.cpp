@@ -1,6 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "QuadPackingSolver.h"
+#include "Utility/QuadPackingSolver.h"
 
 QuadNode::QuadNode()
 {

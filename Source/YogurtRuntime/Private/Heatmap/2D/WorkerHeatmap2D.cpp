@@ -9,9 +9,9 @@
 #include "RenderResource.h"
 #include "RHIResources.h"
 #include "IntPoint.h"
-#include "Version.h"
+#include "Utility/Version.h"
 
-#include "QuadPackingSolver.h"
+#include "Utility/QuadPackingSolver.h"
 
 bool FWorkerHeatmap2D::ProcessRead(FString& rootPath, TArray<FString>& subPaths, FVector2D timeRange,
 	UTextureRenderTarget2D* renderTarget, TSharedPtr<QuadNode> quadMapRoot)

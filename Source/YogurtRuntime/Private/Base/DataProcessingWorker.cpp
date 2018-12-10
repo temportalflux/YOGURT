@@ -1,6 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "DataProcessingWorker.h"
+#include "Base/DataProcessingWorker.h"
 
 //***********************************************************
 //Thread Worker Starts as NULL, prior to being instanced

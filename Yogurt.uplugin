@@ -17,6 +17,11 @@
 		{
 			"Name": "YogurtRuntime",
 			"Type": "Runtime",
+			"LoadingPhase": "PreDefault"
+		},
+		{
+			"Name": "YogurtEditor",
+			"Type": "Editor",
 			"LoadingPhase": "Default"
 		}
 	]

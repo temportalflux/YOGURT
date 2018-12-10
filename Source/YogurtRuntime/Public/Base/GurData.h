@@ -5,8 +5,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Engine/TextureRenderTarget2D.h"
-#include "QuadPackingSolver.h"
-#include "DataPoint.h"
+#include "Utility/QuadPackingSolver.h"
+#include "Base/DataPoint.h"
 
 #include "GurData.generated.h"
 

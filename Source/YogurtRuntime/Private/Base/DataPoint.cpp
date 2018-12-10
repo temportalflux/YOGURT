@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "DataPoint.h"
-#include "Version.h"
+#include "Base/DataPoint.h"
+#include "Utility/Version.h"
 #include "YogurtRuntime.h"
 
 UDataPoint::UDataPoint(FObjectInitializer const & init)

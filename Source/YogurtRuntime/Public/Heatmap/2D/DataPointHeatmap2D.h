@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "DataPoint.h"
+#include "Base/DataPoint.h"
 #include "DataPointHeatmap2D.generated.h"
 
 /**

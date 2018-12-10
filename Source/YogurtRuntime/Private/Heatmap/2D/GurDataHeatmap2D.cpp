@@ -3,10 +3,10 @@
 #include "GurDataHeatmap2D.h"
 
 #include "Heatmap/2D/DataPointHeatmap2D.h"
-#include "DataProcessingWorker.h"
+#include "Base/DataProcessingWorker.h"
 #include "Heatmap/2D/WorkerHeatmap2D.h"
 
-#include "RecordingAreaQuad.h"
+#include "Utility/RecordingAreaQuad.h"
 #include "Engine/World.h"
 #include "EngineUtils.h"
 #include "Materials/MaterialInstanceDynamic.h"

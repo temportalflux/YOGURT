@@ -14,7 +14,7 @@
 #include "Paths.h"
 #include "MemoryReader.h"
 
-#include "Version.h"
+#include "Utility/Version.h"
 
 #include "DataProcessingWorker.generated.h"
 

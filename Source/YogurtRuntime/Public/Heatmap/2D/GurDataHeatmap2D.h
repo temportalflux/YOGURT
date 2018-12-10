@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GurData.h"
+#include "Base/GurData.h"
 #include "GurDataHeatmap2D.generated.h"
 
 class UDataPointHeatmap2D;
