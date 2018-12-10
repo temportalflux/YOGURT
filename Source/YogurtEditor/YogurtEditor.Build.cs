@@ -41,6 +41,7 @@ public class YogurtEditor : ModuleRules
 				"SlateCore",
 				"RHI", "RenderCore",
 				"YogurtRuntime",
+				"UnrealEd", "InputCore",
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
